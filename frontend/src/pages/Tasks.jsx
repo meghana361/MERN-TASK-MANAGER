@@ -1,4 +1,3 @@
-// Tasks.jsx
 import { useEffect, useState } from "react";
 import api from "../api/axios.js";
 import Layout from "../components/Layout.jsx";
@@ -42,13 +41,7 @@ const Tasks = () => {
     <Layout>
       <div className="space-y-10">
         <div>
-          <h1
-            className="
-              text-4xl font-extrabold
-              bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600
-              bg-clip-text text-transparent
-            "
-          >
+          <h1 className="text-4xl font-extrabold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
             Tasks
           </h1>
           <p className="text-gray-600 mt-1">
@@ -86,13 +79,7 @@ const Tasks = () => {
         </div>
 
         {filteredTasks.length === 0 ? (
-          <div
-            className="
-              bg-white/80 backdrop-blur
-              rounded-2xl p-6 text-center
-              shadow-md
-            "
-          >
+          <div className="bg-white/80 backdrop-blur rounded-2xl p-6 text-center shadow-md">
             <p className="text-gray-600">No tasks found.</p>
           </div>
         ) : (

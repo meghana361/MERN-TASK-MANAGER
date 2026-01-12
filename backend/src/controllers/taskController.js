@@ -14,10 +14,32 @@ export const createTask = async (req, res) => {
       priority: req.body.priority,
       dueDate: req.body.dueDate,
       project: req.body.project,
-      assignedTo: req.user._id
+      assignedTo: req.body.assignedTo || req.user._id,
     });
 
-    res.status(201).json(task);
+    const populatedTask = await task.populate([
+      { path: "project", select: "title" },
+      { path: "assignedTo", select: "name email" },
+    ]);
+
+    res.status(201).json(populatedTask);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * @desc    Get all tasks of logged-in user
+ * @route   GET /api/tasks
+ * @access  Private
+ */
+export const getAllTasks = async (req, res) => {
+  try {
+    const tasks = await Task.find({ assignedTo: req.user._id })
+      .populate("project", "title")
+      .populate("assignedTo", "name email");
+
+    res.json(tasks);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -30,7 +52,13 @@ export const createTask = async (req, res) => {
  */
 export const getTasksByProject = async (req, res) => {
   try {
-    const tasks = await Task.find({ project: req.params.projectId });
+    const tasks = await Task.find({
+      project: req.params.projectId,
+      assignedTo: req.user._id,
+    })
+      .populate("project", "title")
+      .populate("assignedTo", "name email");
+
     res.json(tasks);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -49,14 +77,22 @@ export const updateTask = async (req, res) => {
     if (!task)
       return res.status(404).json({ message: "Task not found" });
 
-    task.title = req.body.title || task.title;
-    task.description = req.body.description || task.description;
-    task.status = req.body.status || task.status;
-    task.priority = req.body.priority || task.priority;
-    task.dueDate = req.body.dueDate || task.dueDate;
+    task.title = req.body.title ?? task.title;
+    task.description = req.body.description ?? task.description;
+    task.status = req.body.status ?? task.status;
+    task.priority = req.body.priority ?? task.priority;
+    task.dueDate = req.body.dueDate ?? task.dueDate;
+    task.project = req.body.project ?? task.project;
+    task.assignedTo = req.body.assignedTo ?? task.assignedTo;
 
     const updatedTask = await task.save();
-    res.json(updatedTask);
+
+    const populatedTask = await updatedTask.populate([
+      { path: "project", select: "title" },
+      { path: "assignedTo", select: "name email" },
+    ]);
+
+    res.json(populatedTask);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -76,15 +112,6 @@ export const deleteTask = async (req, res) => {
 
     await task.deleteOne();
     res.json({ message: "Task removed" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-export const getAllTasks = async (req, res) => {
-  try {
-    const tasks = await Task.find({ assignedTo: req.user._id })
-      .populate("project", "title");
-    res.json(tasks);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

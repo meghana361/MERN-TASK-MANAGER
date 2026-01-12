@@ -1,13 +1,14 @@
-// TaskForm.jsx
 import { useEffect, useState } from "react";
 import api from "../api/axios.js";
 
-const TaskForm = ({ projects, editingTask, setEditingTask, refresh }) => {
+const TaskForm = ({ projects, users = [], editingTask, setEditingTask, refresh }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("Todo");
   const [priority, setPriority] = useState("Medium");
   const [project, setProject] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [assignedTo, setAssignedTo] = useState("");
 
   useEffect(() => {
     if (editingTask) {
@@ -15,14 +16,28 @@ const TaskForm = ({ projects, editingTask, setEditingTask, refresh }) => {
       setDescription(editingTask.description || "");
       setStatus(editingTask.status);
       setPriority(editingTask.priority);
-      setProject(editingTask.project);
+      setProject(editingTask.project?._id || editingTask.project);
+      setDueDate(
+        editingTask.dueDate
+          ? editingTask.dueDate.split("T")[0]
+          : ""
+      );
+      setAssignedTo(editingTask.assignedTo?._id || "");
     }
   }, [editingTask]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const data = { title, description, status, priority, project };
+    const data = {
+      title,
+      description,
+      status,
+      priority,
+      project,
+      dueDate: dueDate || null,
+      assignedTo: assignedTo || null,
+    };
 
     if (editingTask) {
       await api.put(`/tasks/${editingTask._id}`, data);
@@ -36,6 +51,8 @@ const TaskForm = ({ projects, editingTask, setEditingTask, refresh }) => {
     setStatus("Todo");
     setPriority("Medium");
     setProject("");
+    setDueDate("");
+    setAssignedTo("");
     refresh();
   };
 
@@ -55,11 +72,7 @@ const TaskForm = ({ projects, editingTask, setEditingTask, refresh }) => {
       </h2>
 
       <input
-        className="
-          w-full p-3 border rounded-xl
-          focus:ring-2 focus:ring-blue-400 focus:outline-none
-          transition
-        "
+        className="w-full p-3 border rounded-xl"
         placeholder="Task title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
@@ -67,17 +80,13 @@ const TaskForm = ({ projects, editingTask, setEditingTask, refresh }) => {
       />
 
       <textarea
-        className="
-          w-full p-3 border rounded-xl
-          focus:ring-2 focus:ring-blue-400 focus:outline-none
-          transition
-        "
+        className="w-full p-3 border rounded-xl"
         placeholder="Description"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
       />
 
-      <div className="flex gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <select
           className="border p-2 rounded-xl"
           value={status}
@@ -98,6 +107,13 @@ const TaskForm = ({ projects, editingTask, setEditingTask, refresh }) => {
           <option>Low</option>
         </select>
 
+        <input
+          type="date"
+          className="border p-2 rounded-xl"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+        />
+
         <select
           className="border p-2 rounded-xl"
           value={project}
@@ -111,6 +127,21 @@ const TaskForm = ({ projects, editingTask, setEditingTask, refresh }) => {
             </option>
           ))}
         </select>
+
+        {users.length > 0 && (
+          <select
+            className="border p-2 rounded-xl col-span-2"
+            value={assignedTo}
+            onChange={(e) => setAssignedTo(e.target.value)}
+          >
+            <option value="">Assign to (optional)</option>
+            {users.map((u) => (
+              <option key={u._id} value={u._id}>
+                {u.name}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       <div className="flex gap-4">
